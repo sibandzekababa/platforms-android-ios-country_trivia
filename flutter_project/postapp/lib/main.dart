@@ -15,15 +15,38 @@ class FlagTriviaApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => QuizProvider(),
-      child: MaterialApp(
-        title: 'Country Flag Trivia',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
-          useMaterial3: true,
-        ),
-        home: const HomeScreen(),
+      child: ValueListenableBuilder<ThemeMode>(
+        valueListenable: themeModeNotifier,
+        builder: (context, themeMode, _) {
+          return MaterialApp(
+            title: 'Country Flag Trivia',
+            debugShowCheckedModeBanner: false,
+            theme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: Colors.indigo,
+                brightness: Brightness.light,
+              ),
+              useMaterial3: true,
+            ),
+            darkTheme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: Colors.indigo,
+                brightness: Brightness.dark,
+              ),
+              useMaterial3: true,
+            ),
+            themeMode: themeMode,
+            home: const HomeScreen(),
+          );
+        },
       ),
     );
   }
+}
+
+/// Global theme mode notifier for toggling light/dark.
+final ThemeModeNotifier themeModeNotifier = ThemeModeNotifier();
+
+class ThemeModeNotifier extends ValueNotifier<ThemeMode> {
+  ThemeModeNotifier() : super(ThemeMode.system);
 }
