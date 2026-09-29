@@ -35,6 +35,8 @@ class QuizProvider extends ChangeNotifier {
   int _score = 0;
   bool _answered = false;
   String? _selectedIsoCode;
+  int _currentStreak = 0;
+  int _bestStreak = 0;
 
   // ── Getters ────────────────────────────────────────────────────────
   QuizStatus get status => _status;
@@ -51,6 +53,8 @@ class QuizProvider extends ChangeNotifier {
   int get totalCountries => _allCountries.length;
   int get solvedCount => _solvedIsoCodes.length;
   bool get isPoolExhausted => _solvedIsoCodes.length >= _allCountries.length;
+  int get currentStreak => _currentStreak;
+  int get bestStreak => _bestStreak;
 
   // ── Public API ─────────────────────────────────────────────────────
 
@@ -108,11 +112,18 @@ class QuizProvider extends ChangeNotifier {
 
     if (isCorrect) {
       _answered = true;
-      _score += _pointsForAttempt(_attemptsUsed);
+      _currentStreak++;
+      if (_currentStreak > _bestStreak) _bestStreak = _currentStreak;
+
+      // Base points + streak bonus (2 points per streak level, max +10).
+      final basePoints = _pointsForAttempt(_attemptsUsed);
+      final streakBonus = _currentStreak <= 5 ? (_currentStreak - 1) * 2 : 10;
+      _score += basePoints + streakBonus;
       _solvedIsoCodes.add(_correctCountry!.isoCode);
     } else if (_attemptsUsed >= maxAttempts) {
-      // Out of attempts — reveal the answer and mark as solved.
+      // Out of attempts — reveal the answer, mark as solved, reset streak.
       _answered = true;
+      _currentStreak = 0;
       _solvedIsoCodes.add(_correctCountry!.isoCode);
     }
 
@@ -174,5 +185,6 @@ class QuizProvider extends ChangeNotifier {
     _attemptsUsed = 0;
     _answered = false;
     _selectedIsoCode = null;
+    _currentStreak = 0;
   }
 }
