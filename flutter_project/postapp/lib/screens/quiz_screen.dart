@@ -33,26 +33,27 @@ class QuizScreen extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                // Score / progress / attempts header.
                 ScoreHeader(quiz: quiz),
                 const SizedBox(height: 24),
-
-                // Flag image.
                 Expanded(
                   flex: 3,
-                  child: _FlagCard(flagUrl: country.flagUrl),
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 400),
+                    switchInCurve: Curves.easeIn,
+                    switchOutCurve: Curves.easeOut,
+                    child: _FlagCard(
+                      key: ValueKey(country.flagUrl),
+                      flagUrl: country.flagUrl,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16),
-
-                // Question prompt.
                 Text(
                   'Which country does this flag belong to?',
                   style: Theme.of(context).textTheme.titleMedium,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
-
-                // Answer options.
                 Expanded(
                   flex: 4,
                   child: ListView.separated(
@@ -60,17 +61,15 @@ class QuizScreen extends StatelessWidget {
                     separatorBuilder: (_, _) => const SizedBox(height: 10),
                     itemBuilder: (context, index) {
                       final option = quiz.options[index];
-                      return OptionButton(
+                      return AnimatedOptionButton(
                         country: option,
                         status: _optionStatus(quiz, option),
                         onTap: () => _handleTap(context, quiz, option),
+                        index: index,
                       );
-
                     },
                   ),
                 ),
-
-                // "Next" button appears after the question is answered.
                 if (quiz.answered) ...[
                   const SizedBox(height: 12),
                   SizedBox(
@@ -94,11 +93,10 @@ class QuizScreen extends StatelessWidget {
     );
   }
 
-  void _handleTap(BuildContext context, QuizProvider quiz, country) {
+  void _handleTap(BuildContext context, QuizProvider quiz, Country country) {
     final isCorrect = quiz.selectOption(country.isoCode);
 
     if (!isCorrect && quiz.remainingAttempts > 0) {
-      // Brief feedback for a wrong answer that still has attempts left.
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -124,8 +122,44 @@ class QuizScreen extends StatelessWidget {
   }
 }
 
+/// Option button with slide-in animation.
+class AnimatedOptionButton extends StatelessWidget {
+  const AnimatedOptionButton({
+    super.key,
+    required this.country,
+    required this.status,
+    required this.onTap,
+    required this.index,
+  });
+
+  final Country country;
+  final OptionStatus status;
+  final VoidCallback onTap;
+  final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: Duration(milliseconds: 300 + (index * 100)),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Transform.translate(
+          offset: Offset(30 * (1 - value), 0),
+          child: Opacity(opacity: value, child: child),
+        );
+      },
+      child: OptionButton(
+        country: country,
+        status: status,
+        onTap: onTap,
+      ),
+    );
+  }
+}
+
 class _FlagCard extends StatelessWidget {
-  const _FlagCard({required this.flagUrl});
+  const _FlagCard({super.key, required this.flagUrl});
 
   final String flagUrl;
 
