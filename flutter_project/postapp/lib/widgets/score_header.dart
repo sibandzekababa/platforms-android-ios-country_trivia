@@ -36,6 +36,12 @@ class ScoreHeader extends StatelessWidget {
               value: '${quiz.remainingAttempts}',
               color: quiz.remainingAttempts == 1 ? Colors.red : Colors.green,
             ),
+            _StatItem(
+              icon: Icons.local_fire_department,
+              label: 'Streak',
+              value: '${quiz.currentStreak}',
+              color: Colors.orange,
+            ),
           ],
         ),
       ),
