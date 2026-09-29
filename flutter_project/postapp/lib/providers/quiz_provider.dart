@@ -35,6 +35,8 @@ class QuizProvider extends ChangeNotifier {
   int _score = 0;
   bool _answered = false;
   String? _selectedIsoCode;
+  bool _hintUsed = false;
+  final Set<String> _eliminatedIsoCodes = {};
 
   // ── Getters ────────────────────────────────────────────────────────
   QuizStatus get status => _status;
@@ -51,6 +53,8 @@ class QuizProvider extends ChangeNotifier {
   int get totalCountries => _allCountries.length;
   int get solvedCount => _solvedIsoCodes.length;
   bool get isPoolExhausted => _solvedIsoCodes.length >= _allCountries.length;
+  bool get hintUsed => _hintUsed;
+  Set<String> get eliminatedIsoCodes => Set.unmodifiable(_eliminatedIsoCodes);
 
   // ── Public API ─────────────────────────────────────────────────────
 
@@ -120,6 +124,25 @@ class QuizProvider extends ChangeNotifier {
     return isCorrect;
   }
 
+  /// Uses the 50/50 hint — eliminates 2 incorrect options.
+  /// Returns true if hint was available and used, false otherwise.
+  bool useHint() {
+    if (_hintUsed || _answered || _status != QuizStatus.playing) return false;
+    if (_options.length < 4) return false;
+
+    final incorrectOptions =
+        _options.where((o) => o.isoCode != _correctCountry?.isoCode).toList();
+    incorrectOptions.shuffle(_random);
+
+    _eliminatedIsoCodes
+      ..clear()
+      ..addAll(incorrectOptions.take(2).map((o) => o.isoCode));
+    _hintUsed = true;
+
+    notifyListeners();
+    return true;
+  }
+
   /// Advances to the next question or completes the game.
   void nextQuestion() {
     if (!_answered) return;
@@ -174,5 +197,7 @@ class QuizProvider extends ChangeNotifier {
     _attemptsUsed = 0;
     _answered = false;
     _selectedIsoCode = null;
+    _hintUsed = false;
+    _eliminatedIsoCodes.clear();
   }
 }

@@ -52,6 +52,33 @@ class QuizScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
 
+                // Hint button.
+                if (!quiz.answered && !quiz.hintUsed && quiz.remainingAttempts > 1) ...[
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        final used = quiz.useHint();
+                        if (used) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('50/50 hint used — 2 options eliminated'),
+                              duration: Duration(seconds: 1),
+                              backgroundColor: Colors.blue,
+                            ),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.lightbulb_outline),
+                      label: const Text('50/50 Hint'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                      ),
+                    ),
+                  ),
+                ],
+
                 // Answer options.
                 Expanded(
                   flex: 4,
@@ -65,7 +92,6 @@ class QuizScreen extends StatelessWidget {
                         status: _optionStatus(quiz, option),
                         onTap: () => _handleTap(context, quiz, option),
                       );
-
                     },
                   ),
                 ),
@@ -112,7 +138,12 @@ class QuizScreen extends StatelessWidget {
   }
 
   OptionStatus _optionStatus(QuizProvider quiz, Country country) {
-    if (!quiz.answered) return OptionStatus.idle;
+    if (!quiz.answered) {
+      if (quiz.eliminatedIsoCodes.contains(country.isoCode)) {
+        return OptionStatus.disabled;
+      }
+      return OptionStatus.idle;
+    }
 
     if (country.isoCode == quiz.correctCountry?.isoCode) {
       return OptionStatus.correct;
