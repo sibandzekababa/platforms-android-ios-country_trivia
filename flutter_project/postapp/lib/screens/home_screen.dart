@@ -2,7 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/quiz_provider.dart';
+import '../main.dart' show themeModeNotifier;
 import 'quiz_screen.dart';
+
+class ThemeToggle extends StatelessWidget {
+  const ThemeToggle({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return IconButton(
+      icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
+      tooltip: isDark ? 'Switch to light mode' : 'Switch to dark mode',
+      onPressed: () {
+        themeModeNotifier.value =
+            isDark ? ThemeMode.light : ThemeMode.dark;
+      },
+    );
+  }
+}
 
 /// Entry screen: shows loading spinner, error state, or a start button.
 class HomeScreen extends StatefulWidget {
@@ -138,6 +156,8 @@ class _ReadyView extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               ),
             ),
+            const SizedBox(height: 16),
+            const ThemeToggle(),
           ],
         ),
       ),
